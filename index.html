@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ITER-AI Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <nav aria-label="Main navigation">
+        <button class="nav-item" data-page="command">⌂ Command Center</button>
+        <button class="nav-item active" data-page="chat">💬 Chat</button>
+        <button class="nav-item" data-page="flow">Diagram Flow Architect</button>
+        <button class="nav-item" data-page="drivers">🎛 Model Driving</button>
+        <button class="nav-item" data-page="lab">🧪 Model Lab</button>
+        <button class="nav-item" data-page="inspector">Run Inspector</button>
+        <button class="nav-item" data-page="evals">✓ Evaluations</button>
+        <button class="nav-item" data-page="ide">⌨ IDE Agent</button>
+        <button class="nav-item" data-page="agentic">🤖 Agentic Coding</button>
+        <button class="nav-item" data-page="projects">📁 Projects & Memory</button>
+        <button class="nav-item" data-page="settings">⚙ Settings</button>
+        <button class="nav-item" data-page="api">🔌 API Server</button>
+      </nav>
+      <div id="sidebarFooter" class="dim" style="font-size:9px;padding:6px 10px">
+        Alt+1..9 switch pages · Alt+S save
+      </div>
+    </aside>
+
+    <div id="main">
+      <div id="topbar">
+        <span><span class="dot" id="connDot"></span><span id="connStatus">Not connected</span></span>
+        <span style="flex:1"></span>
+        <span id="saveState"></span>
+      </div>
+
+      <div id="content">
+        <section class="page" id="page-command">
+          <div id="cmdPage">
+            <h2>Command Center</h2>
+            <p class="api-sub">Starter kits — one click installs a matched workflow + behavior profile + evaluation suite.</p>
+            <div id="kitList"></div>
+            <div id="kitResult" class="pre" style="display:none"></div>
+          </div>
+        </section>
+
+        <section class="page active" id="page-chat">
+          <!-- Conversation sidebar -->
+          <div id="convoPane">
+            <button id="newChatBtn" class="primary full">+ New chat</button>
+            <input id="convoSearch" placeholder="Search…">
+            <div id="convoList"></div>
+          </div>
+
+          <!-- Transcript -->
+          <div id="chatRight">
+            <div id="provBar">
+              <label for="provSelect">Provider</label>
+              <select id="provSelect"></select>
+              <button id="provScan" title="Detect LM Studio, Ollama, llama.cpp and other local servers">Scan local</button>
+              <button id="provNew" title="Add provider profile">+ Add</button>
+              <button id="provEdit" title="Edit selected profile">Edit</button>
+              <button id="provDel" title="Delete selected profile">Delete</button>
+            </div>
+            <div id="sysRow">
+              <label for="sysPrompt">System prompt</label>
+              <textarea id="sysPrompt" placeholder="You are a helpful assistant."></textarea>
+            </div>
+            <div id="log"></div>
+            <div id="chatBar">
+              <textarea id="input" placeholder="Type a message… (Enter to send, Shift+Enter newline)"></textarea>
+              <button class="primary" id="sendBtn">Send</button>
+              <button id="stopBtn" disabled title="Cancel the active generation">Stop</button>
+              <button id="retryBtn" disabled title="Regenerate last reply">↻</button>
+              <button id="clearBtn" title="Clear current conversation">Clear</button>
+            </div>
+          </div>
+
+          <!-- Context inspector -->
+          <div id="ctxPane">
+            <button id="ctxToggle" class="full">Hide ▸</button>
+            <div id="ctxBody">
+              <strong>Provider / Model</strong>
+              <div id="ctxModel" class="pre">—</div>
+              <strong>System prompt</strong>
+              <div id="ctxSys" class="pre">—</div>
+              <strong>Message count</strong>
+              <div id="ctxCount">0</div>
+              <strong>Est. context chars <em>(estimate, not token-exact)</em></strong>
+              <div id="ctxChars">0</div>
+              <strong>Last usage <em>(provider-reported when available)</em></strong>
+              <div id="ctxUsage" class="pre">—</div>
+              <strong>Last request <em>(API key redacted)</em></strong>
+              <div id="ctxRequest" class="pre">—</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-drivers">
+          <div id="bpLayout">
+            <div id="bpLeft">
+              <strong class="pane-title">Behavior profiles</strong>
+              <div id="bpList"></div>
+              <button id="bpNew" class="full">+ New profile</button>
+              <strong class="pane-title">Describe a profile (AI)</strong>
+              <textarea id="bpPrompt" rows="3" placeholder="e.g. A strict code reviewer that plans carefully and verifies with commands"></textarea>
+              <button id="bpGenerate" class="primary full">✦ Generate profile</button>
+              <div id="bpGenState" class="bp-genstate"></div>
+              <strong class="pane-title">Profile templates</strong>
+              <select id="bpTemplate"></select>
+              <button id="bpFromTemplate" class="full">Install</button>
+            </div>
+            <div id="bpEditor"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-flow">
+          <div id="flowLayout">
+            <!-- Left: palette + workflow list -->
+            <div id="wfLeft">
+              <div id="flowHelp">
+                <b>Pick a template</b> → + New workflow → <b>Run ▸</b>.<br>
+                Drag <b>●</b> dots (right side) onto another node to connect. Click a node to edit it.
+              </div>
+              <strong class="pane-title">Nodes</strong>
+              <div id="wfPalette"></div>
+              <strong class="pane-title">Workflows</strong>
+              <select id="wfSelect"></select>
+              <strong class="pane-title">Workflow templates</strong>
+              <select id="wfTemplate">
+                <option value="blank">Blank</option>
+                <option value="research">Research</option>
+                <option value="translate">Translate</option>
+                <option value="emailDraft">Email draft</option>
+                <option value="extract">Extract JSON</option>
+                <option value="codeReview">Code review</option>
+                <option value="brainstorm">Brainstorm</option>
+                <option value="summarize">Summarize</option>
+                <option value="factCheck">Fact-check</option>
+                <option value="cleanExtract">Extract &amp; clean JSON</option>
+                <option value="twoPerspectives">Two perspectives (Join)</option>
+                <option value="memoryLoop">Memory loop</option>
+                <option value="httpDigest">Fetch &amp; digest (HTTP)</option>
+                <option value="pacedPipeline">Paced two-step pipeline</option>
+                <option value="publishGate">Publish gate</option>
+              </select>
+              <button id="wfNewBtn" class="full">+ New workflow</button>
+            </div>
+
+            <!-- Center: canvas -->
+            <div id="wfCenter">
+              <div id="wfToolbar">
+                <input id="wfName" placeholder="Workflow name">
+                <button id="wfValidateBtn">Validate</button>
+                <button id="wfSaveBtn" class="primary">Save</button>
+                <button id="wfRunBtn">Run ▸</button>
+              </div>
+              <div id="wfCanvasWrap">
+                <div id="wfCanvas"></div>
+              </div>
+              <div id="wfValidation"></div>
+            </div>
+
+            <!-- Right: inspector -->
+            <div id="wfInspector"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-lab">
+          <div id="labLayout">
+            <div id="labMain">
+              <div id="labHeader">
+                <strong class="pane-title">Model inventory</strong>
+                <span class="dim" style="font-size:11px">Capabilities shown only from real probes — never inferred from model names.</span>
+              </div>
+              <div id="labList"></div>
+            </div>
+            <div id="labSide">
+              <strong class="pane-title">Role routing</strong>
+              <p class="dim" id="labRoutingInfo" style="font-size:11px"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-inspector">
+          <div id="inspLayout">
+            <div id="inspLeft">
+              <strong class="pane-title">Runs</strong>
+              <select id="runSelect"></select>
+              <button id="runCancelBtn" class="full" title="Cancel the active run">Cancel active run</button>
+            </div>
+            <div id="inspCenter">
+              <div id="runHeader">
+                <span id="runState"></span>
+                <span id="runMeta" class="dim"></span>
+              </div>
+              <div id="inspMain">
+                <div id="inspTimelineCol">
+                  <strong class="pane-title">Timeline</strong>
+                  <div id="runTimeline"></div>
+                  <strong class="pane-title">Events</strong>
+                  <div id="runEvents"></div>
+                </div>
+                <div id="runDetailCol">
+                  <strong class="pane-title">Summary</strong>
+                  <div id="runSummary"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-evals">
+          <div id="evLayout">
+            <div id="evLeft">
+              <strong class="pane-title">Evaluation suites</strong>
+              <div id="esList"></div>
+              <button id="esNew" class="full">+ New suite</button>
+              <strong class="pane-title">Suite templates</strong>
+              <select id="esTemplate"></select>
+              <button id="esFromTemplate" class="full">Install</button>
+            </div>
+            <div id="esEditor"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-ide">
+          <div id="ideLayout">
+            <!-- Left: folder + file tree -->
+            <div id="ideLeft">
+              <button id="ideOpenFolder" class="primary full">📂 Open folder…</button>
+              <div id="ideRoot" class="ide-root" title="Project root">No folder open</div>
+              <div id="ideTree"></div>
+            </div>
+
+            <!-- Center: file viewer/editor -->
+            <div id="ideCenter">
+              <div id="ideTabs">
+                <span id="ideActivePath" class="dim">No file open</span>
+                <span style="flex:1"></span>
+                <button id="ideSaveFile" disabled>Save file</button>
+                <button id="ideReloadTree" title="Refresh the file tree">⟳</button>
+              </div>
+              <textarea id="ideEditor" spellcheck="false" placeholder="Select a file on the left, or let the agent create one. Edits save with Ctrl+S or the Save button."></textarea>
+              <div id="ideConsoleWrap">
+                <div id="ideConsoleHead">
+                  <strong>Console</strong>
+                  <span class="dim" id="ideConsoleHint">agent actions and command output appear here</span>
+                </div>
+                <pre id="ideConsole" class="pre"></pre>
+              </div>
+            </div>
+
+            <!-- Right: agent panel -->
+            <div id="ideRight">
+              <strong class="pane-title">Coding agent</strong>
+              <label class="ide-field">Task
+                <textarea id="ideTask" rows="4" placeholder="e.g. Add a README with install and run instructions, then run npm test and report results."></textarea>
+              </label>
+              <label class="ide-field">Model
+                <select id="ideModel"></select>
+              </label>
+              <label class="chk ide-chk"><input type="checkbox" id="ideApproval"> Ask before writing files / running commands</label>
+              <label class="ide-field">Max steps
+                <input id="ideMaxSteps" type="number" min="1" max="100" value="20">
+              </label>
+              <div class="ide-btnrow">
+                <button id="ideRun" class="primary">▶ Run agent</button>
+                <button id="ideStop" disabled>Stop</button>
+              </div>
+              <div id="ideState" class="dim"></div>
+              <div id="ideSteps"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-agentic">
+          <div id="acLayout">
+            <!-- Left: saved agents + templates -->
+            <div id="acLeft">
+              <strong class="pane-title">Coding agents</strong>
+              <div id="acList"></div>
+              <button id="acNew" class="full">+ New agent</button>
+              <strong class="pane-title">Preset templates</strong>
+              <select id="acTemplate"></select>
+              <button id="acFromTemplate" class="full">Add preset</button>
+              <strong class="pane-title">Recent runs</strong>
+              <div id="acRuns"></div>
+            </div>
+
+            <!-- Center: preset editor -->
+            <div id="acEditor"></div>
+
+            <!-- Right: launch + live trace -->
+            <div id="acRight">
+              <strong class="pane-title">Launch agent</strong>
+              <label class="ac-field">Workspace
+                <div class="ac-inline">
+                  <input id="acWorkspace" placeholder="Absolute folder path">
+                  <button id="acChooseFolder" title="Choose a folder">📂</button>
+                </div>
+              </label>
+              <label class="ac-field">Task
+                <textarea id="acTask" rows="5" placeholder="e.g. Add a health-check endpoint and a test for it, then run the test suite."></textarea>
+              </label>
+              <label class="ac-field">Model
+                <select id="acModel"></select>
+              </label>
+              <div class="ac-launch-row">
+                <label class="ac-chk"><input type="checkbox" id="acApproval"> Ask before writes / commands</label>
+                <label class="ac-field ac-steps">Max steps
+                  <input id="acMaxSteps" type="number" min="1" max="100" value="20">
+                </label>
+              </div>
+              <div class="ac-btnrow">
+                <button id="acRun" class="primary">▶ Run agent</button>
+                <button id="acStop" disabled>Stop</button>
+              </div>
+              <div id="acState" class="dim"></div>
+              <strong class="pane-title">Trace</strong>
+              <div id="acSteps"></div>
+              <strong class="pane-title">Console</strong>
+              <pre id="acConsole" class="pre"></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-projects">
+          <div id="prjLayout">
+            <div id="prjLeft">
+              <strong class="pane-title">Projects</strong>
+              <div id="prjList"></div>
+              <button id="prjNew" class="full">+ New project</button>
+              <strong class="pane-title">Project templates</strong>
+              <select id="prjTemplate"></select>
+              <button id="prjFromTemplate" class="full">Install</button>
+            </div>
+            <div id="prjEditorWrap">
+              <div id="prjEditor"></div>
+            </div>
+            <div id="memPane">
+              <strong class="pane-title">Memory <em>(per project)</em></strong>
+              <div id="memList"></div>
+              <div id="memForm">
+                <select id="memCategory"></select>
+                <input id="memText" placeholder="Add a memory entry…">
+                <button id="memAdd">Add</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-settings">
+          <!-- populated by phase9.js -->
+        </section>
+
+        <section class="page" id="page-api">
+          <div id="apiPage">
+            <h2>API Server</h2>
+            <p class="api-sub">Exposes this app's data and workflow execution over HTTP — usable by AI agents inside the app and by external tools on this machine.</p>
+            <div id="apiStatusCard">
+              <div>Status: <span id="apiRunState" class="badge err">starting…</span></div>
+              <div>Base URL: <code id="apiBaseUrl">http://127.0.0.1:3789</code></div>
+              <div>Auth token: <input id="apiToken" type="password" placeholder="(none — anyone on this machine can call it)">
+                <button id="apiTokenSave">Save token</button></div>
+              <div class="dim" id="apiHint">Set a token to require <code>Authorization: Bearer &lt;token&gt;</code> on every call.</div>
+            </div>
+            <h3>Endpoints</h3>
+            <table class="ev-table" id="apiEndpoints">
+              <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+            </table>
+            <h3>Try it</h3>
+            <div id="apiTry">
+              <button id="apiPing">GET /api/health</button>
+              <button id="apiListWf">GET /api/workflows</button>
+              <button id="apiListRuns">GET /api/runs</button>
+              <pre id="apiTryOut" class="pre"></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="dock">
+        <span id="dockStatus">Ready</span>
+        <span id="dockTokens"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provider settings dialog -->
+  <dialog id="providerDlg">
+    <form id="providerForm" method="dialog">
+      <h3>Provider profile</h3>
+      <label>Display name
+        <input id="provName" required placeholder="LM Studio local">
+      </label>
+      <label>Base URL
+        <input id="provUrl" required placeholder="http://localhost:1234/v1">
+      </label>
+      <label>API Key <em>(stored locally, never logged or exported)</em>
+        <input id="provKey" type="password" placeholder="optional">
+      </label>
+      <label>Model ID
+        <input id="provModel" required placeholder="qwen2.5-7b-instruct">
+      </label>
+      <label class="chk"><input type="checkbox" id="provLocal" checked> Local endpoint (no data leaves this machine)</label>
+      <menu>
+        <button value="cancel" type="button" id="provCancel">Cancel</button>
+        <button value="save" class="primary">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="store.js"></script>
+  <script src="workflow.js"></script>
+  <script src="engine.js"></script>
+  <script src="model-driving.js"></script>
+  <script src="app.js"></script>
+  <script src="renderer.js"></script>
+  <script src="flow.js"></script>
+  <script src="inspector.js"></script>
+  <script src="projects.js"></script>
+  <script src="model-lab.js"></script>
+  <script src="evaluations.js"></script>
+  <script src="phase9.js"></script>
+  <script src="api-page.js"></script>
+  <script src="command-center.js"></script>
+  <script src="ide.js"></script>
+  <script src="agentic.js"></script>
+</body>
+</html>
