@@ -39,8 +39,13 @@ Output goes to `release/`:
 Optional: add `build/icon.ico` and set `win.icon` in `package.json` for a custom
 icon, and set `CSC_LINK` / `CSC_KEY_PASSWORD` to code-sign.
 
-## Layout
+## Releases
 
+Pushing a tag like `v1.0.0` triggers the GitHub Actions build, which attaches the
+installer and portable exe to a release. The release body comes from
+`RELEASE_NOTES.md` — update that file before tagging.
+
+## Layout
 | Path | Purpose |
 | --- | --- |
 | `main.js` | Electron main process, IPC, local API server bootstrap |
